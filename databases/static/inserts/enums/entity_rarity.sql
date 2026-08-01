@@ -1,0 +1,10 @@
+
+
+insert into Enum_entity_Rarity (id, name) values 
+	(1,'COMMON'),
+	(2,'UNCOMMON'),
+	(3,'RARE'),
+	(4,'EPIC'),
+	(5,'LEGENDARY'),
+	(6,'UNIQUE')
+	;
