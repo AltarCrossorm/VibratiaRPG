@@ -22,6 +22,8 @@
 #include <concepts>
 #include <nlohmann/json.hpp>
 
+#include "logSystem.hpp"
+
 #define GET_SQLITE3_VALUE(type,var) (*std::get_if<type>(&var))
 
 using RowValue = std::variant<std::monostate, int, double, std::string>;
@@ -119,9 +121,10 @@ public:
 	Cursor(std::shared_ptr<sqlite3> db_connection, bool autoCommit) 
 	: db(db_connection), autoCommit(autoCommit), stmt(nullptr) {}
 
+	
+	Cursor() = delete;
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
-	Cursor() = delete;
 	Cursor(Cursor&&) = delete;
 	Cursor& operator=(Cursor&&) = delete;
 
@@ -191,8 +194,7 @@ public:
 
 		// Auto-add if the request started by an INSERT, UPDATE or DELETE
 		if (this->isWriteQuery(sql)) {
-			int rc = sqlite3_step(this->stmt);
-			if (rc != SQLITE_DONE) {
+			if (sqlite3_step(this->stmt) != SQLITE_DONE) {
 				throw std::runtime_error("Erreur d'exécution de l'écriture : " + std::string(sqlite3_errmsg(this->db.get())));
 			}
 		}
@@ -294,13 +296,16 @@ public:
 		// Custom destrucor for shared pointer
 		this->db = std::shared_ptr<sqlite3>(raw_db, [](sqlite3* d) {
 			sqlite3_close(d);
-			std::cout << "[BDD Fermée proprement]\n";
+			log("[BDD Fermée proprement]");
 		});
 		this->autocommit = autoCommit;
 		
 		if(foreignKeysEnforcment) {
 			sqlite3_exec(this->db.get(),"PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 		}
+
+		// Have an forceful busy timer of 15 seconds in case of heavy computation or too much requests waiting their time
+		sqlite3_busy_timeout(this->db.get(), 15000);
 	}
 
 	/**
