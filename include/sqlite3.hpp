@@ -23,6 +23,9 @@
 #include <nlohmann/json.hpp>
 
 #include "logSystem.hpp"
+#ifndef __cpp_exceptions
+#include <cstdlib>
+#endif
 
 #define GET_SQLITE3_VALUE(type,var) (*std::get_if<type>(&var))
 
@@ -217,14 +220,35 @@ public:
 			for (int i = 0; i < col_count; ++i) {
 				int type = sqlite3_column_type(this->stmt, i);
 
-				if(type == SQLITE_NULL) {
-					row.push_back(std::monostate{});
-				} else if (type == SQLITE_INTEGER) {
+				switch (type) {
+				case SQLITE_NULL:
+					row.push_back(std::monostate{}); // same as SQLITE_BUSY
+					break;
+				[[likely]] case SQLITE_INTEGER:
 					row.push_back(sqlite3_column_int(this->stmt, i));
-				} else if (type == SQLITE_FLOAT) {
+					break;
+				case SQLITE_FLOAT:
 					row.push_back(sqlite3_column_double(this->stmt, i));
-				} else {
+					break;
+				case SQLITE3_TEXT:
 					row.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(this->stmt, i))));
+					break;
+				default:
+#ifdef __cpp_exceptions
+					throw std::runtime_error("Undefined SQLite type");
+#else
+					write(1,"Undefined SQLite type",22);
+					exit(1);
+#endif
+				}
+				if(type == SQLITE_NULL) {
+					
+				} else if (type == SQLITE_INTEGER) {
+					
+				} else if (type == SQLITE_FLOAT) {
+					
+				} else {
+					
 				}
 			}
 			return row;
