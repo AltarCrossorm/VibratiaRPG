@@ -241,15 +241,6 @@ public:
 					exit(1);
 #endif
 				}
-				if(type == SQLITE_NULL) {
-					
-				} else if (type == SQLITE_INTEGER) {
-					
-				} else if (type == SQLITE_FLOAT) {
-					
-				} else {
-					
-				}
 			}
 			return row;
 		}
