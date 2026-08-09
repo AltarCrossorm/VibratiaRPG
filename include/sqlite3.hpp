@@ -20,7 +20,7 @@
 #include <memory>
 #include <variant>
 #include <utility>
-#include <concepts>
+#include "logSystem.hpp"
 #include <nlohmann/json.hpp>
 
 #define GET_SQLITE3_VALUE(type,var) (*std::get_if<type>(&var))
@@ -136,7 +136,10 @@ private:
 
 public:
 	Cursor(std::shared_ptr<sqlite3> db_connection, bool autoCommit) 
-	: db(db_connection), autoCommit(autoCommit), stmt(nullptr) {}
+	: db(db_connection), autoCommit(autoCommit), stmt(nullptr)
+	{
+		log("Curseur employé !");
+	}
 
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
@@ -305,13 +308,14 @@ class Connection {
 private:
 	std::shared_ptr<sqlite3> db;
 	bool autocommit = true;
-
+	static Connection* instance;
+	bool isInstanceCreated = false;
 public:
 	Connection(const std::string& db_name, bool autoCommit = true, bool foreignKeysEnforcment = true) {
 		sqlite3* raw_db = nullptr;
 		if (sqlite3_open(db_name.c_str(), &raw_db) != SQLITE_OK) {
 			if (raw_db) sqlite3_close(raw_db);
-			throw std::runtime_error("Impossible d'ouvrir la BDD");
+			throw std::runtime_error("Impossible d'ouvrir la BDD \""+db_name+'"');
 		}
 		// Custom destrucor for shared pointer
 		this->db = std::shared_ptr<sqlite3>(raw_db, [](sqlite3* d) {
@@ -323,6 +327,7 @@ public:
 		if(foreignKeysEnforcment) {
 			sqlite3_exec(this->db.get(),"PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
 		}
+		log("BDD ouverte !");
 	}
 
 	/**
