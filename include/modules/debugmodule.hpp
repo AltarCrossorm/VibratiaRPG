@@ -21,27 +21,49 @@ public:
 		SlashCommandManager::addSlashCommand(
 			"debug",
 			newSlashCommand(debug),
-			"Debug entry point",
-			{}
+			"Debug entry point"
 		);
 
-		SlashCommandManager::addSubSlashCommand(
+		SlashCommandManager::addSubGroupSlashCommand(
 			"debug",
-			"get_inventory",
+			"set",
+			"A slash command group setter base"
+		);
+
+		SlashCommandManager::addSubGroupSlashCommand(
+			"debug",
+			"get",
+			"A slash command group getter base"
+		);
+
+
+		SlashCommandManager::addSubCommandFromGroup(
+			"debug",
+			"get",
+			"inventory",
 			newSlashCommand(getInventory),
-			"get the inventory of a user",
+			"Obtiens l'inventaire de quelqu'un",
 			{
-				{
-					dpp::co_integer,
-					"id",
-					"Identifier of the character",
-					true
-				}
+				dpp::command_option(dpp::co_integer,"id","Identifier of the character",true)
 			}
 		);
+
+		SlashCommandManager::addSubCommandFromGroup(
+			"debug",
+			"set",
+			"character_position",
+			newSlashCommand(setCharacterPos),
+			"Définis l'emplacement d'un personnage",
+			{
+				dpp::command_option(dpp::co_integer,"id","Identifiant du personnage",true)
+			}
+		);
+
 	}
 
 	dpp_async debug(const dpp::slashcommand_t&){co_return;}
 
 	dpp_async getInventory(const dpp::slashcommand_t&);
+
+	dpp_async setCharacterPos(const dpp::slashcommand_t&);
 };
