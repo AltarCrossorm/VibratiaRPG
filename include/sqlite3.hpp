@@ -106,6 +106,24 @@ private:
 	}
 
 	/**
+	 * @fn bind_param 
+	 * @param index The position in all of the '?' presents in the query
+	 * @param value The boolean element, implicitely casted as an integer
+	 */
+	void bind_param(int index, bool value) {
+		sqlite3_bind_int(this->stmt, index, value);
+	}
+
+	/**
+	 * @fn bind_param
+	 * @param index The position in all of the '?' presents in the query
+	 * @param std::nullptr_t The purest C++ null element, passed in as a simple nullptr
+	 */
+	void bind_param(int index, std::nullptr_t) {
+		sqlite3_bind_null(this->stmt, index);
+	}
+
+	/**
 	 * @fn bind_all
 	 * @tparam args variadic rvalues for perfect forwarding
 	 */
