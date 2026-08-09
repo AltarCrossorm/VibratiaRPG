@@ -214,7 +214,10 @@ public:
 				throw std::runtime_error("Erreur d'exécution de l'écriture : " + std::string(sqlite3_errmsg(this->db.get())));
 			}
 		}
-
+#ifdef DEBUG_MODE_ENABLED
+		log("SQLite raw statement : \""+std::string(sqlite3_sql(this->stmt))+'"');
+		log("SQLite parsed statement : \""+std::string(sqlite3_expanded_sql(this->stmt))+'"');
+#endif
 		return this;
 	}
 
