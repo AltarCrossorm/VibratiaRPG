@@ -11,6 +11,8 @@
  */
 #include <dpp/dpp.h>
 #include "dotenv.h"
+#include <csignal>
+#include "sqlite3.hpp"
 
 #include "logSystem.hpp"
 #include "config.hpp"
@@ -33,7 +35,6 @@ int main() {
         if (event.severity == dpp::ll_critical) {
             log("Arrêt d'urgence provoqué par un log Discord de niveau Critical !",true,logSystem::LSLevel::FATAL, logSystem::LSDirectory::DISCORD);
             
-            // 3. Extinction propre du bot
             bot.shutdown(); 
         }
     });
@@ -54,6 +55,9 @@ int main() {
 
 #ifdef DEBUG_MODE_ENABLED
 	DebugModule debug;
+	SQLite3::Connection con(ROOT_DIRECTORY+"/databases/testdb.db");
+#else
+	SQLite3::Connection con(ROOT_DIRECTORY+"/databases/main.db");
 #endif
 	// ---------- End of Initialization
 

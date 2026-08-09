@@ -23,7 +23,7 @@
 #include "logSystem.hpp"
 #include <nlohmann/json.hpp>
 
-#define GET_SQLITE3_VALUE(type,var) (*std::get_if<type>(&var))
+#define GET_SQLITE3_VALUE(type,var) std::get<type>(var)
 
 using RowValue = std::variant<std::monostate, std::int64_t, double, std::string>;
 using Row = std::vector<RowValue>;
@@ -323,6 +323,9 @@ public:
 			std::cout << "[BDD Fermée proprement]\n";
 		});
 		this->autocommit = autoCommit;
+		if(!this->instance) {
+			this->instance = this;
+		}
 		
 		if(foreignKeysEnforcment) {
 			sqlite3_exec(this->db.get(),"PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
@@ -368,6 +371,8 @@ public:
 	inline long long last_insert_rowid() const noexcept {
 		return sqlite3_last_insert_rowid(this->db.get());
 	}
+
+	static Connection* inst(void);
 };
 }
 
