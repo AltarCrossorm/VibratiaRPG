@@ -12,6 +12,7 @@
  * 
  * Comments and Documentation are here to help the developers who come after.
  */
+#include <cstdint>
 #include <iostream>
 #include <sqlite3.h>
 #include <string>
@@ -24,7 +25,7 @@
 
 #define GET_SQLITE3_VALUE(type,var) (*std::get_if<type>(&var))
 
-using RowValue = std::variant<std::monostate, int, double, std::string>;
+using RowValue = std::variant<std::monostate, std::int64_t, double, std::string>;
 using Row = std::vector<RowValue>;
 struct SQLtoJSONlist;
 struct SQLtoJSONobject;
@@ -239,7 +240,7 @@ public:
 				if(type == SQLITE_NULL) {
 					row.push_back(std::monostate{});
 				} else if (type == SQLITE_INTEGER) {
-					row.push_back(sqlite3_column_int(this->stmt, i));
+					row.push_back(sqlite3_column_int64(this->stmt, i));
 				} else if (type == SQLITE_FLOAT) {
 					row.push_back(sqlite3_column_double(this->stmt, i));
 				} else {
@@ -295,7 +296,7 @@ public:
 		{
 			cols.push_back(sqlite3_column_name(this->stmt,i));
 		}
-		
+
 		return cols;
 	}
 };
