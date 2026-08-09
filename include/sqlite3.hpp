@@ -65,7 +65,7 @@ private:
 	 * @tparam value Integral value only accepted
 	 */
 	template<std::integral Integral>
-	void bind_param(int index, Integral value) { 
+	void bind_param(int index, Integral value) {
 		sqlite3_bind_int64(this->stmt, index, static_cast<long long>(value)); 
 	}
 
@@ -75,7 +75,7 @@ private:
 	 * @tparam value Floating point value only accepted
 	 */
 	template<std::floating_point Floating>
-	void bind_param(int index, Floating value) { 
+	void bind_param(int index, Floating value) {
 		sqlite3_bind_double(this->stmt, index, static_cast<double>(value)); 
 	}
 
@@ -84,7 +84,7 @@ private:
 	 * @param index The position in all of the '?' presents in the query
 	 * @param value The string element, passed in with the c_str() method
 	 */
-	void bind_param(int index, const std::string& value) { 
+	void bind_param(int index, const std::string& value) {
 		sqlite3_bind_text(this->stmt, index, value.c_str(), -1, SQLITE_TRANSIENT); 
 	}
 
@@ -93,7 +93,7 @@ private:
 	 * @param index The position in all of the '?' presents in the query
 	 * @param value The string element, passing natively into the method body
 	 */
-	void bind_param(int index, const char* value) { 
+	void bind_param(int index, const char* value) {
 		sqlite3_bind_text(this->stmt, index, value, -1, SQLITE_TRANSIENT); 
 	}
 
@@ -183,7 +183,7 @@ public:
 
 		std::string prefix = sql.substr(0, 6);
 		for (char &c : prefix) c = std::toupper(c);
-		
+
 		return ( prefix == "INSERT" || prefix == "UPDATE" || prefix == "DELETE" || prefix == "CREATE" );
 	}
 
