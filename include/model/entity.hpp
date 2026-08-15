@@ -10,12 +10,14 @@
  *
  * Comments and Documentation are here to help the developers who come after.
  */
-#include "entityrarity.hpp"
-#include "entitytype.hpp"
+#include "_base.hpp"
+#include "ennemiespool.hpp"
+#include "enums/entityrarity.hpp"
+#include "enums/entitytype.hpp"
+#include "sqlite3.hpp"
 
-struct Entity
+struct Entity final : public ORM_BASE
 {
-	long long id;
 	EntityType type;
 	std::string name;
 	std::string slug;
@@ -23,12 +25,25 @@ struct Entity
 	int maxStack;
 	std::string description;
 
-	operator int() {
-		return this->id;
+	DECLARE_ORM_METADATA(Entity,id,type,name,slug,rarity,maxStack,description)
+};
+
+class EntityRepository final : public Repository<Entity>
+{
+public:
+	virtual std::string getTableName(void) override {
+		return "entity";
 	}
 
-	operator std::string() {
-		return this->slug;
-	}
+	virtual Entity buildObject(std::vector<RowValue> val) override {
+		BUILD_OBJECT_START(Entity,val)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(type,EntityType)
+		BUILD_OBJECT_ADD_FIELD(name,std::string)
+		BUILD_OBJECT_ADD_FIELD(slug,std::string)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(rarity,EntityRarity)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(maxStack,int)
+		BUILD_OBJECT_ADD_FIELD(description, std::string)
+		BUILD_OBJECT_END
+	} 
 };
  
