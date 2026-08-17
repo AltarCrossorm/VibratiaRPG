@@ -11,7 +11,7 @@
 .print "--- Entities inserted!"
 
 .print "-- Inserting all Ennemies"
-.read "./inert_all_ennemies.sql"
+.read "./insert_all_ennemies.sql"
 .print "--- Ennemies inserted"
 
 .print "--- Inserting Misc and Others"

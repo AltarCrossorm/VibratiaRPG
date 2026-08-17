@@ -4,8 +4,11 @@ drop table if exists positions_travel;
 drop table if exists positions;
 
 drop table if exists loot_table;
-drop table if exists ennemies;
+drop table if exists ennemy;
 
+drop table if exists Enum_effect_Listener;
+drop table if exists Enum_effect_Stat;
+drop table if exists Enum_effect_Modifier;
 drop table if exists effect;
 
 drop table if exists Enum_effect_Stat;

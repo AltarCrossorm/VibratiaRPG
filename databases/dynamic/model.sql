@@ -48,12 +48,12 @@ create table fights (
 	)
 );
 
-create table Enum_turn_action (
+create table Enum_turn_Action (
 	id		INTEGER	primary key,
 	name	TEXT	not null
 );
 
-create table Enum_turn_distance (
+create table Enum_turn_Distance (
 	id		INTEGER	primary key,
 	name	TEXT	not null
 );
@@ -63,10 +63,10 @@ create table turn (
 	fight_id			INTEGER		not null	references fights(id),
 	action_timestamp	TIMESTAMP	not null,
 	opponent_first		BOOLEAN		not null,	-- 0 for opponent1, 1 for opponent2
-	distance			INTEGER		not null	references Enum_turn_distance(id),
-	action_first		INTEGER			null	references Enum_turn_action(id),
-	action_second		INTEGER			null	references Enum_turn_action(id),
-	bonus_action		INTEGER			null	references Enum_turn_action(id)
+	distance			INTEGER		not null	references Enum_turn_Distance(id),
+	action_first		INTEGER			null	references Enum_turn_Action(id),
+	action_second		INTEGER			null	references Enum_turn_Action(id),
+	bonus_action		INTEGER			null	references Enum_turn_Action(id)
 );
 
 create table turn_status (

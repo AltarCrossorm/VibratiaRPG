@@ -126,12 +126,12 @@ create table Enum_effect_Stat (
 	name	TEXT	not null
 );
 
-create table Enum_effect_listener (
+create table Enum_effect_Listener (
 	id		INTEGER	primary key,
 	name	TEXT	not null
 );
 
-create table Enum_effect_modifier (
+create table Enum_effect_Modifier (
 	id		INTEGER	primary key,
 	name	TEXT	not null
 );
@@ -144,11 +144,11 @@ create table effect (
 	icon_url			TEXT						not null,
 	is_global			BOOLEAN						not null,
 
-	listener			INTEGER		 				not null	references Enum_effect_listener(id),
+	listener			INTEGER		 				not null	references Enum_effect_Listener(id),
 	refinement_level	SMALLINT					not null,
 	max_stack			INTEGER		default 1		not null,
 	turns_lasting		INTEGER		default 1		not null,
-	modifier			INTEGER						not null	references Enum_effect_modifier(id),
+	modifier			INTEGER						not null	references Enum_effect_Modifier(id),
 	modified_stat		INTEGER						not null	references Enum_effect_Stat(id),
 	modifier_type		TEXT						not null,
 	value				REAL 		default 1.0		not null,
@@ -241,7 +241,7 @@ create table ennemy (
 
 create table loot_table (
 	id			INTEGER		primary key AUTOINCREMENT,
-	ennemy_id	INTEGER		not null 	references ennemies(id),
+	ennemy_id	INTEGER		not null 	references ennemy(id),
 	entity_id	INTEGER		not null	references entity(id),
 	weight		REAL		not null,
 	quantity	INTEGER		not null

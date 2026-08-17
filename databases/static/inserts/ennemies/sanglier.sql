@@ -1,6 +1,6 @@
 
 
-insert into ennemies (name, reroll_times, base_hp, bonus_hp_per_level, base_atk, bonus_atk_per_level, base_spd, bonus_spd_per_level, base_def, bonus_def_per_level, weight_attack, weight_block, weight_grab, weight_dodge, weight_counter)
+insert into ennemy (name, reroll_times, base_hp, bonus_hp_per_level, base_atk, bonus_atk_per_level, base_spd, bonus_spd_per_level, base_def, bonus_def_per_level, weight_attack, weight_block, weight_grab, weight_dodge, weight_counter)
 values (
 	"Sanglier",
 	5,
@@ -26,7 +26,7 @@ select
 from
 	entity e, sqlite_sequence ss
 where
-	ss.name = 'ennemies' and
+	ss.name = 'ennemy' and
 	e.slug = 'beginners_blade'
 ;
 
@@ -36,7 +36,7 @@ select
 from
 	entity e, sqlite_sequence ss
 where
-	ss.name = 'ennemies' and
+	ss.name = 'ennemy' and
 	e.slug = 'raw_steak'
 ;
 
@@ -46,7 +46,7 @@ select
 from
 	entity e, sqlite_sequence ss
 where
-	ss.name = 'ennemies' and
+	ss.name = 'ennemy' and
 	e.slug = 'raw_steak'
 ;
 
@@ -56,8 +56,8 @@ select
 from
 	entity e, sqlite_sequence ss
 where
-	ss.name = 'ennemies' and
+	ss.name = 'ennemy' and
 	e.slug = 'raw_steak'
 ;
 
-.print "Sanglier Inserted!"
+.print "'Sanglier' inserted!"
