@@ -40,9 +40,16 @@ int main() {
     });
     bot.on_ready([&bot]([[maybe_unused]] const dpp::ready_t& event) {
 		log("Bot Lanched",DEBUG_TRUE, logSystem::LSLevel::INFO, logSystem::LSDirectory::DISCORD);
-        log("Connecté en tant que " + bot.me.username + "!",true,  logSystem::LSLevel::INFO, logSystem::LSDirectory::DISCORD);
+        log("Connecté en tant que " + bot.me.username + "!", true, logSystem::LSLevel::INFO, logSystem::LSDirectory::DISCORD);
 
     });
+
+	signal(SIGINT,[](int) {
+		log("Got signal SIGINT, shutting down.");
+		log("Bot was shut down manually", true, logSystem::LSLevel::INFO, logSystem::LSDirectory::DISCORD);
+		// Can't easily shutdown the bot... Damn
+		exit(0);
+	});
 
 
     // Managers initialization

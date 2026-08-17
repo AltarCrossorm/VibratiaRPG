@@ -115,8 +115,11 @@ void log(const std::string message, bool printSTDOUT, logSystem::LSLevel logType
 		return;
 	}
 
-	std::string filename = "_log_" + oss_year.str() + "-" + oss_month.str() + "-" + oss_day.str() + ".log";
-	fs::path file_path = dir_path.c_str() + filename;
+	std::string fileBaseName = dirtag;
+	for(char &c: fileBaseName) c = std::tolower(c);
+
+	std::string filename = fileBaseName + "_log_" + oss_year.str() + "-" + oss_month.str() + "-" + oss_day.str() + ".log";
+	fs::path file_path = dir_path.c_str() + std::string("/") + filename;
 
 	std::ofstream log_file(file_path, std::ios::app);
 	if (log_file.is_open()) {

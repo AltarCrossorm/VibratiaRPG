@@ -4,7 +4,7 @@
 create table characters (
 	id						INTEGER	primary key	AUTOINCREMENT,
 	user					INTEGER	not null,
-	character_name			TEXT	not null,
+	name					TEXT	not null,
 	character_tupper_start	TEXT		null,
 	character_tupper_end	TEXT		null
 );
@@ -13,21 +13,10 @@ create table character_stats (
 	id					INTEGER				primary key AUTOINCREMENT,
 	character			INTEGER				not null	references characters(id),
 	level				INTEGER 			not null,
-	pocket_balance		REAL	default	0	not null,
 
 	resonnance_strengh	INTEGER				not null, -- Same purpose as Rupture effect in HSR or Elemental Mastery in Genshin
 
-	base_ATK			INTEGER				not null,
-	base_DEF			INTEGER				not null,
-	base_SPD			INTEGER				not null,
-	base_HP				INTEGER				not null,
-
-	base_Crit_Rate		REAL				not null,
-	base_Crit_DMG		REAL				not null,
-
-	base_ER				REAL				not null,
-
-	constraint CK_pocket_balance_positive check (pocket_balance > 0.0)
+	base_ER				REAL				not null
 );
 
 create table banks (
@@ -47,27 +36,55 @@ create table fights (
 	id			INTEGER		primary key	AUTOINCREMENT,
 	startFight	TIMESTAMP	not null,
 	channelID	INTEGER		not null,
-	opponnent1	TEXT		not null 	references characters(id),
-	opponnent2	TEXT		not null	references characters(id),
+	isPvP		BOOLEAN		not null,
+	opponent1	INTEGER		not null 	references characters(id),
+	opponent2	INTEGER		not null,	-- Can reference an ennemy if [isPvP] is false
 	isEnded		BOOLEAN		not null,
 
 	constraint CK_fights_opponents_not_same check(
-		opponnent1 <> opponnent2
+		(opponent1 <> opponent2 and isPvP is not 0)
+		or
+		isPvP is 0
 	)
 );
 
-create table Enum_fight_status_action (
+create table Enum_turn_action (
 	id		INTEGER	primary key,
 	name	TEXT	not null
 );
 
-create table fight_status (
+create table Enum_turn_distance (
+	id		INTEGER	primary key,
+	name	TEXT	not null
+);
+
+create table turn (
 	id					INTEGER		primary key	AUTOINCREMENT,
 	fight_id			INTEGER		not null	references fights(id),
 	action_timestamp	TIMESTAMP	not null,
 	opponent_first		BOOLEAN		not null,	-- 0 for opponent1, 1 for opponent2
-	action_first		INTEGER			null	references Enum_fight_status_action(id),
-	action_second		INTEGER			null	references Enum_fight_status_action(id)
+	distance			INTEGER		not null	references Enum_turn_distance(id),
+	action_first		INTEGER			null	references Enum_turn_action(id),
+	action_second		INTEGER			null	references Enum_turn_action(id),
+	bonus_action		INTEGER			null	references Enum_turn_action(id)
+);
+
+create table turn_status (
+	id						INTEGER		primary key	AUTOINCREMENT,
+	turn_id					INTEGER		not null	references turn(id),
+	opponent1RPActionDone	BOOLEAN		not null,
+	opponent2RPActionDone	BOOLEAN		not null
+);
+
+create table status_box (
+	id				INTEGER		primary key	AUTOINCREMENT,
+	turn_id			INTEGER		not null	references turn(id),
+	effect_id		INTEGER		not null	references effect(id),
+	stack			INTEGER		not null,
+	turns_remaning	INTEGER		not null,
+
+	constraint CK_status_box_stack_positive check(stack > 0),
+	constraint CK_status_box_turns_positive check(turns_remaning > 0)
 );
 
 create table inventories (
@@ -129,14 +146,13 @@ create table characters_action_weapons (
 	)
 );
 
-create table ennemies_pool (
+create table ennemy_pool (
 	id			INTEGER		primary key AUTOINCREMENT,
 	ennemy_id	INTEGER		not null	references ennemies(id),
-	channelID	INTEGER		not null
+	position	INTEGER		not null 	references positions(id)
 );
 
 create table characters_positions (
-	id 			INTEGER		primary key AUTOINCREMENT,
-	character	INTEGER		not null 	references character(id),
+	id 			INTEGER		primary key	references characters(id),
 	position	INTEGER		not null	references positions(id)
 );

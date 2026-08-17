@@ -21,17 +21,6 @@
 #include <tuple>
 #include "_base_macros.hpp"
 
-#define BUILD_OBJECT_ADD_FIELD(fieldname, type) obj.fieldname = GET_SQLITE3_VALUE<type>(BuildObjectVariant[inc]); inc++;
-#define BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(fieldname,castType) obj.fieldname = static_cast<castType>(GET_SQLITE3_VALUE<long>(BuildObjectVariant[inc])); inc++;
-#define BUILD_OBJECT_ADD_FIELD_WITH_FLOAT_CAST(fieldname,castType) obj.fieldname = static_cast<castType>(GET_SQLITE3_VALUE<double>(BuildObjectVariant[inc])); inc++;
-
-#define BUILD_OBJECT_ADD_FIELD_OPTIONAL(fieldname, type) obj.fieldname = BuildObjectVariant[inc].index() == 0 ? std::nullopt : std::make_optional<type>(GET_SQLITE3_VALUE<type>(BuildObjectVariant[inc])); inc++;
-#define BUILD_OBJECT_ADD_FIELD_OPTIONAL_WITH_INT_CAST(fieldname, castType) obj.fieldname = BuildObjectVariant[inc].index() == 0 ? std::nullopt : std::make_optional<castType>(static_cast<castType>(GET_SQLITE3_VALUE<long>(BuildObjectVariant[inc]))); inc++;
-#define BUILD_OBJECT_ADD_FIELD_OPTIONAL_WITH_FLOAT_CAST(fieldname, castType) obj.fieldname = BuildObjectVariant[inc].index() == 0 ? std::nullopt : std::make_optional<castType>(static_cast<castType>(GET_SQLITE3_VALUE<double>(BuildObjectVariant[inc]))); inc++;
-
-#define BUILD_OBJECT_START(type,variant) type obj; int inc = 0; auto BuildObjectVariant = variant; BUILD_OBJECT_ADD_FIELD_OPTIONAL(id,long)
-#define BUILD_OBJECT_END return obj;
-
 struct ORM_BASE
 {
 	std::optional<long> id = std::nullopt;

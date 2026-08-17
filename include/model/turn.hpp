@@ -13,11 +13,14 @@
 
 #include "_base.hpp"
 
+CREATE_ENUM(TurnDistance,CLOSE,MIDDLE,FAR,OUT_OR_REACH)
+
 struct Turn final : public ORM_BASE
 {
 	long fight_id;
 	time_t action_timestamp;
-	bool opponent_first; // * `false` if it's `opponent1`who actes first, `true` if it's `opponent2`who actes first
+	bool opponent_first; // * `false` if it's `opponent1` who actes first, `true` if it's `opponent2` who actes first (must be PvP)
+	TurnDistance distance;
 	std::optional<long> action_first;
 	std::optional<long> action_second;
 	std::optional<long> bonus_action;
@@ -36,6 +39,7 @@ class TurnRepository final: public Repository<Turn>
 		BUILD_OBJECT_ADD_FIELD(fight_id,long)
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(action_timestamp,time_t)
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(opponent_first,bool)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(distance,TurnDistance)
 		BUILD_OBJECT_ADD_FIELD_OPTIONAL(action_first,long)
 		BUILD_OBJECT_ADD_FIELD_OPTIONAL(action_second,long)
 		BUILD_OBJECT_ADD_FIELD_OPTIONAL(bonus_action,long)

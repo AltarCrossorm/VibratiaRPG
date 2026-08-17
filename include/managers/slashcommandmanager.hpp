@@ -56,6 +56,14 @@ public:
 	static void addSubGroupSlashCommand(
 		std::string baseSlashCommandName,
 		std::string subGrpSlashCommandName,
+		std::string description
+	);
+
+	static void addSubCommandFromGroup(
+		std::string baseSlashCommandName,
+		std::string subGrpSlashCommandName,
+		std::string slashCommandName,
+		SlashCommandCallback callback,
 		std::string description,
 		SlashOptions options
 	);

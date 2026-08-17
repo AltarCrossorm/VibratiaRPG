@@ -126,23 +126,35 @@ create table Enum_effect_Stat (
 	name	TEXT	not null
 );
 
+create table Enum_effect_listener (
+	id		INTEGER	primary key,
+	name	TEXT	not null
+);
+
+create table Enum_effect_modifier (
+	id		INTEGER	primary key,
+	name	TEXT	not null
+);
+
 create table effect (
 	id					INTEGER						primary key	AUTOINCREMENT,
 	entity_id			BIGINT 						not null 	references entity(id),
 	name				TEXT						not null,
 	description			TEXT						not null,
-	icon				TEXT						not null,
-	listener			BIGINT		 				not null,
+	icon_url			TEXT						not null,
+	is_global			BOOLEAN						not null,
+
+	listener			INTEGER		 				not null	references Enum_effect_listener(id),
 	refinement_level	SMALLINT					not null,
 	max_stack			INTEGER		default 1		not null,
 	turns_lasting		INTEGER		default 1		not null,
-	recharge_after_use	INTEGER		default 0		not null,
-	modifier			TEXT						not null,
+	modifier			INTEGER						not null	references Enum_effect_modifier(id),
 	modified_stat		INTEGER						not null	references Enum_effect_Stat(id),
 	modifier_type		TEXT						not null,
 	value				REAL 		default 1.0		not null,
 	target_stat			INTEGER						null		references Enum_effect_Stat(id),
 	cancel_after_flag	INTEGER						null,
+
 	target_cond_1		INTEGER						null,
 	operator_cond_1		INTEGER						null,
 	value_cond_1		REAL						null,
@@ -151,7 +163,34 @@ create table effect (
 	operator_cond_2		INTEGER						null,
 	value_cond_2		REAL						null
 
-
+	constraint CK_effect_refinment_bounds check(refinement_level between 1 and 4),
+	constraint CK_effect_maxStack_positive check(max_stack > 0),
+	constraint CK_effect_turns_lasting_positive check(turns_lasting > 0),
+	constraint CK_effect_conditions_validation check(
+		(
+			( target_cond_1 is null and operator_cond_1 is null and value_cond_1 is null )
+			and
+			( separator_cond is null )
+			and
+			( target_cond_2 is null and operator_cond_2 is null and value_cond_2 is null )
+		)
+		or
+		(
+			( target_cond_1 is not null and operator_cond_1 is not null and value_cond_1 is not null )
+			and
+			( separator_cond is null )
+			and
+			( target_cond_2 is null and operator_cond_2 is null and value_cond_2 is null )
+		)
+		or
+		(
+			( target_cond_1 is not null and operator_cond_1 is not null and value_cond_1 is not null )
+			and
+			( separator_cond is not null )
+			and
+			( target_cond_2 is not null and operator_cond_2 is not null and value_cond_2 is not null )
+		)
+	)
 
 	-- constraint CK_effect_listener check(upper(listener) in( 'ON_USE','ON_TURN_START','ON_TURN_END','ON_WEAPON_SWITCH','ON_EQUIPPED','ON_NON_EQUIPPED','ON_CRIT','ON_NON_CRIT',
 	-- 														'ON_HEAL','ON_HEALTH_INCREASE','ON_HEALTH_DECREASE','ON_HEALTH_CHANGED','ON_DEFEAT','ON_HEALTH_FULL',
@@ -179,7 +218,7 @@ create table effect (
 	-- constraint CK_effect_cond_operator_1 check(lower(cond_operator) in('eq','gt','lt','gte','lte','neq')),
 );
 
-create table ennemies (
+create table ennemy (
 	id					INTEGER 	primary key AUTOINCREMENT,
 	name				TEXT		not null,
 	reroll_times		INTEGER		not null,
@@ -209,8 +248,8 @@ create table loot_table (
 );
 
 create table positions (
-	id		INTEGER		primary key AUTOINCREMENT,
-	place	INTEGER		not null,
+	id		INTEGER		primary key,
+	name	TEXT		not null
 );
 
 create table positions_travel (

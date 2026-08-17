@@ -66,13 +66,25 @@ void SlashCommandManager::addSubSlashCommand(
 	(*SlashCommandManager::instance()->getMapCommands())[baseSlashCommandName].options.push_back(dpp::command_option(dpp::co_sub_command,subSlashCommandName,description));
 }
 
-void addSubGroupSlashCommand(
+void SlashCommandManager::addSubGroupSlashCommand(
 		std::string baseSlashCommandName,
 		std::string subGrpSlashCommandName,
 		std::string description
 	) {
 	(*SlashCommandManager::instance()->getMapCommands())[baseSlashCommandName].subCommandsGroups[subGrpSlashCommandName] = {description, {}, {}};
 	(*SlashCommandManager::instance()->getMapCommands())[baseSlashCommandName].options.push_back(dpp::command_option(dpp::co_sub_command_group,subGrpSlashCommandName,description));
+}
+
+void SlashCommandManager::addSubCommandFromGroup(
+		std::string baseSlashCommandName,
+		std::string subGrpSlashCommandName,
+		std::string slashCommandName,
+		SlashCommandCallback callback,
+		std::string description,
+		SlashOptions options
+	) {
+	(*SlashCommandManager::instance()->getMapCommands())[baseSlashCommandName].subCommandsGroups[subGrpSlashCommandName].subCommands[slashCommandName] = {description,options,callback,{},{}};
+	(*SlashCommandManager::instance()->getMapCommands())[baseSlashCommandName].subCommandsGroups[subGrpSlashCommandName].options.push_back(dpp::command_option(dpp::co_sub_command,slashCommandName,description));
 }
 
 void SlashCommandManager::addSlashCommand(
@@ -201,4 +213,5 @@ void SlashCommandManager::on_ready(dpp::cluster& bot) {
 		dpp_commands.push_back(cmd);
 	}
 	bot.guild_bulk_command_create(dpp_commands,GUILD_ID);
+	bot.global_bulk_command_delete(); // Juuuuuust in case if something maaaaay happen
 }

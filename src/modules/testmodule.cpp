@@ -49,8 +49,7 @@ dpp_async TestModule::testMessage(const dpp::slashcommand_t& event) {
 
 	// ------------------------------------------------------
 
-	SQLite3::Connection con(ROOT_DIRECTORY+"/databases/static.db");
-	SQLite3::Cursor cur = con.cursor();
+	SQLite3::Cursor cur = SQLite3::Connection::inst()->cursor();
 	std::string exec = R"(
 select
 	w.id,

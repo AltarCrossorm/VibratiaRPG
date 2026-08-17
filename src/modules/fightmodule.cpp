@@ -10,49 +10,177 @@
  *
  * Comments and Documentation are here to help the developers who come after.
  */
-
 #include "discordhelpers.hpp"
-#include <dispatcher.h>
-#include <message.h>
+#include "model/characterpositions.hpp"
+#include "model/ennemypool.hpp"
+#include "model/fights.hpp"
+#include "model/turn.hpp"
+#include "sqlite3.hpp"
 
 dpp_async FightModule::fight(const dpp::slashcommand_t& event) {
 	co_await safe_coro(event.co_reply("This command should not be invoked."));
-	co_return;
 }
 
 dpp_async FightModule::start(const dpp::slashcommand_t& event) {
-	dpp::cluster *bot = event.owner;
+	// dpp::cluster *bot = event.owner;
 	long long cur_channel = event.command.channel_id;
+	dpp::command_value opp = event.get_parameter("opponent");
 
-	dpp::message msg;
+	if (opp.index() != 0) {
+		co_await safe_coro(event.co_reply("PvP implementation is not available for now."));
+		co_return;
+	}
+
+		
+	
+	CharacterPositionsRepository CPRepo;
+	if (!CPRepo.isAUserCharacterIsInChannel(cur_channel,event.command.get_issuing_user())) {
+		co_await safe_coro(event.co_reply("Aucun personnage à vous n'est dans ce salon."));
+		co_return;
+	}
+
+	auto chaPos = CPRepo.getPositionsForCharactersOfAUser(event.command.get_issuing_user());
+	EnnemiesPoolRepository EPRepo;
+	auto ennemyPositionned = EPRepo.getEnnemyFromPosition(cur_channel);
+	if (ennemyPositionned) {
+		co_await safe_coro(event.co_reply("Cet endroit est bien calme... Pas d'ennemis à l'horizon..."));
+		co_return;
+	}
+
+	
+	FightsRepository FRepo;
+	auto remainingFight = FRepo.getLastFightFromPosition(cur_channel);
+	if ( remainingFight && !remainingFight.value().isEnded ) {
+		co_await safe_coro(event.co_reply("Un combat est déjà en cours, pense à te protéger du danger !"));
+		co_return;
+	}
+
+
+	Fights f;
+	f.id = std::nullopt;
+	f.startFight = time(nullptr);
+	f.channelID = cur_channel;
+	f.isPvP = false;
+	f.opponent1 = chaPos[0].id.value();
+	f.opponent2 = ennemyPositionned.value().id.value();
+	f.isEnded = false;
+
+	FRepo.add(f);
+
+	CharacterRepository CRepo;
+	EnnemyRepository ERepo;
+
+	Character chara = CRepo.findById(chaPos[0].id.value()).value();
+	Ennemy en = ERepo.findById(ennemyPositionned.value().id.value()).value();
+
+	dpp::message msg = this->setTurn(f.id.value(),0,FightDistance::FAR,chara,en,false);
 	dpp::embed e;
-	dpp::component compo,row;
+	
+	msg.set_channel_id(cur_channel);
 
+	co_await safe_coro(event.co_reply(msg));
+}
+
+dpp::message FightModule::setTurn(long fightID, long turn, FightDistance distance, Character character, Ennemy ennemy, bool whoIsFirst) {
+	// TODO : Créer un tour
+
+
+	Turn t;
+	t.id = std::nullopt;
+	t.fight_id = fightID;
+	t.action_timestamp = time(nullptr);
+	t.opponent_first = whoIsFirst;
+	t.action_first = std::nullopt;
+	t.action_second = std::nullopt;
+	t.bonus_action = std::nullopt;
+
+	TurnRepository TRepo;
+	TRepo.add(t);
+	return this->setFightEmbed(fightID,turn,t.id.value(),distance,character.name,ennemy.name);
+}
+
+dpp::message FightModule::setTurn(long fightID, long turn, FightDistance distance, Ennemy ennemy, Character character, bool whoIsFirst) {
+	// TODO : Créer un tour
+
+	Turn t;
+	t.id = std::nullopt;
+	t.fight_id = fightID;
+	t.action_timestamp = time(nullptr);
+	t.opponent_first = whoIsFirst;
+	t.action_first = std::nullopt;
+	t.action_second = std::nullopt;
+	t.bonus_action = std::nullopt;
+
+	TurnRepository TRepo;
+	TRepo.add(t);
+	return this->setFightEmbed(fightID,turn,t.id.value(),distance,ennemy.name,character.name);
+}
+
+dpp::message FightModule::setTurn(long fightID, long turn, FightDistance distance, Character firstCharacter, Character secondCharacter, bool whoIsFirst) {
+	// TODO : Créer un tour
+	Turn t;
+	t.id = std::nullopt;
+	t.fight_id = fightID;
+	t.action_timestamp = time(nullptr);
+	t.opponent_first = whoIsFirst;
+	t.action_first = std::nullopt;
+	t.action_second = std::nullopt;
+	t.bonus_action = std::nullopt;
+
+	TurnRepository TRepo;
+	TRepo.add(t);
+	return this->setFightEmbed(fightID,turn,t.id.value(),distance,firstCharacter.name,secondCharacter.name);
+}
+
+dpp::message FightModule::setFightEmbed(long fightID, long turn, long turnID, FightDistance dist, std::string opponent1Name, std::string opponent2Name) {
+	dpp::embed e;
+	dpp::embed_footer ef;
+	std::string distName;
+	dpp::component compo,row;
+	dpp::message msg;
 	compo
 		.set_label("Consulter les options de jeu")
 		.set_emoji("📜")
 		.set_type(dpp::cot_button)
 		.set_style(dpp::cos_secondary)
-		.set_id("drop_actions")
-	;
+		.set_id("drop_actions");
 
-	row.set_type(dpp::cot_action_row)
+	row
+		.set_type(dpp::cot_action_row)
 		.add_component(compo);
 
-	e.set_title("Début d'un combat");
-	e.add_field("Portée","Longue Portée",true)
-	 .add_field("Tour","1", true)
-	 //.add_field("\u200b", "\u200b", false)
-	 .add_field("Personnage jouant en premier","abc")
-	 .add_field("Personnage jouant en second","def");
+	switch(dist){
+	case FightDistance::CLOSE:
+		distName = "Courte portée";
+		break;
+	case FightDistance::MIDDLE:
+		distName = "Moyenne portée";
+		break;
+	case FightDistance::FAR:
+		distName = "Longue portée";
+		break;
+	case FightDistance::OUT_OF_REACH:
+		[[fallthrough]];
+	default:
+		distName = "Hors portée";
+	}
 
-	msg.set_channel_id(cur_channel)
-		.add_embed(e)
+	ef.set_text("- Fight ID : "+std::to_string(fightID)+" | - Turn ID : "+std::to_string(turnID));
+
+	e.set_title("Combat !")
+	 .add_field("Portée",distName,true)
+	 .add_field("Tour",std::to_string(turn), true)
+	 .add_field("\u200b", "\u200b", false)
+	 .add_field("Joue en premier",opponent1Name,true)
+	 .add_field("Joue en second",opponent2Name,true)
+	 .set_footer(ef);
+
+	msg.add_embed(e)
 		.add_component(row);
 
-	co_await safe_coro(event.co_reply(msg));
-	co_return;
+	return msg;
 }
+
 
 dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
 	dpp::message msg;
@@ -149,12 +277,10 @@ dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
 		.set_flags(dpp::m_ephemeral);
 
 	co_await safe_coro(event.co_reply(msg));
-	co_return;
 }
 
 dpp_async FightModule::abandon(const dpp::slashcommand_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"fonction activée : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::abandon(const dpp::button_click_t& event) {
@@ -170,45 +296,36 @@ dpp_async FightModule::info(const dpp::slashcommand_t& event) {
 	std::string id = std::to_string(std::get<long int>(event.get_parameter("fight_id")));
 	co_await safe_coro(event.co_reply("Activation de la commande **info** with ID "+id));
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"fonction activée : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::attack(const dpp::button_click_t& event) {
 	co_await safe_coro(event.co_reply("L'action de {} a été prise en compte"));
-	co_return;
 }
 
 dpp_async FightModule::dodge(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::block(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::grab(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::counter(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::changeToWeapon1(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::changeToWeapon2(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }
 
 dpp_async FightModule::changeToWeapon3(const dpp::button_click_t& event) {
 	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
-	co_return;
 }

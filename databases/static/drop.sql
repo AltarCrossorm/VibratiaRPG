@@ -1,5 +1,8 @@
 -- Drop in reverse order (to preserve foreign keys)
 
+drop table if exists positions_travel;
+drop table if exists positions;
+
 drop table if exists loot_table;
 drop table if exists ennemies;
 

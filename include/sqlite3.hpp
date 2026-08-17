@@ -23,8 +23,6 @@
 #include "logSystem.hpp"
 #include <nlohmann/json.hpp>
 
-#define GET_SQLITE3_VALUE(type,var) std::get<type>(var)
-
 using RowValue = std::variant<std::monostate, std::int64_t, double, std::string>;
 using Row = std::vector<RowValue>;
 struct SQLtoJSONlist;
@@ -37,6 +35,11 @@ nlohmann::json& operator<<(nlohmann::json&, const SQLtoJSONlist&);
 nlohmann::json& operator<<(nlohmann::json&, const SQLtoJSONobject&);
 
 using null = std::monostate;
+
+template<typename T>
+constexpr T GET_SQLITE3_VALUE(const RowValue& var) {
+    return std::get<T>(var);
+}
 
 namespace SQLite3 {
 
@@ -122,6 +125,19 @@ private:
 	 */
 	void bind_param(int index, std::nullptr_t) {
 		sqlite3_bind_null(this->stmt, index);
+	}
+
+	/**
+	 * @fn bind_param
+	 * @param index The position in all of the '?' presents in the query
+	 * @tparam std::optional<T> The C++ optional element
+	 */
+	template<typename T>
+	void bind_param(int index, std::optional<T> opt) {
+		if(!opt)
+			sqlite3_bind_null(this->stmt, index);
+		else
+			this->bind_param(index,opt.value());
 	}
 
 	/**
@@ -211,7 +227,7 @@ public:
 			this->bind_all(std::forward<Args>(args)...);
 		}
 
-		// Auto-add if the request started by an INSERT, UPDATE or DELETE
+		// Auto-add if the request started by an INSERT, UPDATE, DELETE or CREATE
 		if (this->isWriteQuery(sql)) {
 			int rc = sqlite3_step(this->stmt);
 			if (rc != SQLITE_DONE) {

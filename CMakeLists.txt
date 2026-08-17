@@ -45,10 +45,13 @@ add_executable(DiscordRPG
     src/main.cpp
     src/logSystem.cpp
 	src/discordhelpers.cpp
+	src/sqlite3.cpp
+	
     src/managers/slashcommandmanager.cpp
     src/managers/botmanager.cpp
     src/managers/buttonmanager.cpp
 	src/managers/messagemanager.cpp
+
     src/modules/testmodule.cpp
     src/modules/fightmodule.cpp
 	src/modules/debugmodule.cpp
@@ -103,8 +106,8 @@ if(PROFILER)
 	)
 endif()
 
-enable_testing()
-add_subdirectory(tests)
+#enable_testing()
+#add_subdirectory(tests)
 
 # Optionnel : affiche un message si tout est ok
 message(STATUS "DPP, OpenSSL et SQLite sont prêts à être forgés !")

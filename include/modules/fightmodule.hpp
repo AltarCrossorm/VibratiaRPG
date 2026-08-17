@@ -13,9 +13,20 @@
 
 #include "managers/slashcommandmanager.hpp"
 #include "managers/buttonmanager.hpp"
+#include "model/character.hpp"
+#include "model/ennemy.hpp"
+
+enum class FightDistance
+{
+	CLOSE,
+	MIDDLE,
+	FAR,
+	OUT_OF_REACH,
+};
 
 class FightModule
 {
+	dpp::message setFightEmbed(long fightID, long turn, long turnID, FightDistance dist, std::string opponent1Name, std::string opponent2Name);
 public:
 
 	FightModule()
@@ -32,7 +43,8 @@ public:
 			newSlashCommand(start),
 			"Commencer un combat",
 			{
-				{dpp::co_string,"adversaire","Sélectionnez un adversaire", false}
+				dpp::command_option(dpp::co_string,"opponent","Choose an opponent", false)
+					.add_localization("fr","adversaire","Sélectionnez un adversaire à affronter")
 			}
 		);
 
@@ -124,4 +136,8 @@ public:
 	dpp_async changeToWeapon1(const dpp::button_click_t&);
 	dpp_async changeToWeapon2(const dpp::button_click_t&);
 	dpp_async changeToWeapon3(const dpp::button_click_t&);
+
+	dpp::message setTurn(long fightID, long turn, FightDistance distance, Character character, Ennemy ennemy, bool whoIsFirst);
+	dpp::message setTurn(long fightID, long turn, FightDistance distance, Ennemy ennemy, Character character, bool whoIsFirst);
+	dpp::message setTurn(long fightID, long turn, FightDistance distance, Character firstCharacter, Character secondCharacter, bool whoIsFirst);
 };

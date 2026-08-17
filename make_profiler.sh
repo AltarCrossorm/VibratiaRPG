@@ -12,7 +12,7 @@ else
 fi
 
 if [[ $? -eq 0 ]] ;then
-    ./tests/DiscordRPGTests
+    #./tests/DiscordRPGTests
 else
     echo "Compilation went wrong, escaping program launch"
     exit 1

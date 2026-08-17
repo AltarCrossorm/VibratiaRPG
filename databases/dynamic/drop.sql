@@ -10,7 +10,7 @@ drop table if exists fight_status;
 drop table if exists Enum_fight_status_action;
 drop table if exists fights;
 
-
+drop table if exists characters_positions;
 
 drop table if exists character_weapons;
 drop table if exists characters_action_weapons;
