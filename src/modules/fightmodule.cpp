@@ -183,6 +183,29 @@ dpp::message FightModule::setFightEmbed(long fightID, long turn, long turnID, Fi
 
 
 dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
+	/*
+	 * Checker si le user a bien les droits
+	*/
+	FightsRepository FRepo;
+	auto lastFight = FRepo.getLastFightFromPosition(event.command.channel_id);
+	if(!lastFight){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `drop_actions` by "+std::to_string(event.command.get_issuing_user().id)+", getLastFightFromPosition returned [std::nullopt]");
+		co_return;
+	}
+
+	if(event.command.get_issuing_user().id != lastFight.value().opponent1 &&
+		event.command.get_issuing_user().id != lastFight.value().opponent2) {
+			event.reply("Vous n'êtes pas sensé vous battre ! Allez vous protéger !");
+			co_return;
+		}
+	
+	TurnRepository TRepo;
+	auto lastTurn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!lastTurn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `drop_actions` by "+std::to_string(event.command.get_issuing_user().id)+", getLastTurnFromChannel returned [std::nullopt]");
+		co_return;
+	}
+
 	dpp::message msg;
 	dpp::component row_actions,
 					btn_attack, btn_block, btn_dodge, btn_grab, btn_counter,
@@ -216,8 +239,10 @@ dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
 		.set_emoji("🫳")
 		.set_type(dpp::cot_button)
 		.set_style(dpp::cos_primary)
-		.set_id("grab")
-		.set_disabled(true);
+		.set_id("grab");
+	
+	if(lastTurn->distance == TurnDistance::FAR || lastTurn->distance == TurnDistance::OUT_OR_REACH)
+		btn_grab.set_disabled(true);
 
 	btn_counter
 		.set_label("Contrer")
@@ -305,7 +330,23 @@ dpp_async FightModule::attack(const dpp::button_click_t& event) {
 	 * checker quel est l'opponent
 	 * attribuer l'action
 	*/
-	co_await safe_coro(event.co_reply("L'action de {} a été prise en compte"));
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `attack` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto opponent = TRepo.getWhichOpponentFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!opponent){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `attack` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action d'`ATTAQUE` a été prise en compte !"));
 }
 
 dpp_async FightModule::dodge(const dpp::button_click_t& event) {

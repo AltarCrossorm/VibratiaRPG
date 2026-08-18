@@ -11,10 +11,13 @@
  * Comments and Documentation are here to help the developers who come after.
  */
 #include "_base.hpp"
-#include "ennemiespool.hpp"
-#include "enums/entityrarity.hpp"
-#include "enums/entitytype.hpp"
 #include "sqlite3.hpp"
+#include <string>
+#include "../../ansi.hpp"
+
+CREATE_ENUM(EntityType, WEAPON = 1, ITEM, CONSUMABLE, RELIC, THROWABLE, INFUSER)
+CREATE_ENUM(EntityRarity, COMMON = 1, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE)
+
 
 struct Entity final : public ORM_BASE
 {
@@ -44,6 +47,45 @@ public:
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(maxStack,int)
 		BUILD_OBJECT_ADD_FIELD(description, std::string)
 		BUILD_OBJECT_END
-	} 
+	}
+
+	std::string getEntityTypeString(EntityType et) {
+		switch(et){
+		using enum EntityType;
+		case WEAPON:		return "WEAPON";
+		case ITEM:			return "ITEM";
+		case CONSUMABLE:	return "CONSUMABLE";
+		case RELIC:			return "RELIC";
+		case THROWABLE:		return "THROWABLE";
+		case INFUSER:		return "INFUSER";
+		default:			return "UNKNOWN";
+		}
+	}
+
+	std::string getEntityRarityString(EntityRarity er) {
+		switch(er){
+		using enum EntityRarity;
+		case COMMON:	return "COMMON";
+		case UNCOMMON:	return "UNCOMMON";
+		case RARE:		return "RARE";
+		case EPIC:		return "EPIC";
+		case LEGENDARY:	return "LEGENDARY";
+		case UNIQUE:	return "UNIQUE";
+		default:		return "UNKNOWN";
+		}
+	}
+
+	ansi::text getAnsiFromRarity(EntityRarity er) {
+		switch(er) {
+		using enum EntityRarity;
+		case COMMON:	return ansi::txtColor::LIGHTGREY;
+		case UNCOMMON:	return ansi::txtColor::GREEN;
+		case RARE:		return ansi::txtColor::CYAN;
+		case EPIC:		return ansi::txtColor::PINK;
+		case LEGENDARY:	return ansi::txtColor::GOLD;
+		case UNIQUE:	return ansi::txtColor::RED;
+		default:		return ansi::txtColor::LIGHTGREY;
+		}
+	}
 };
  

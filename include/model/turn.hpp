@@ -15,6 +15,7 @@
 #include <dpp/dpp.h>
 
 CREATE_ENUM(TurnDistance,CLOSE,MIDDLE,FAR,OUT_OR_REACH)
+CREATE_ENUM(TurnAction, NOTHING, ATTACK, BLOCK, GRAB, COUNTER, DODGE, OVERLOAD, WEAPON_CHANGE)
 
 struct Turn final : public ORM_BASE
 {
@@ -22,15 +23,19 @@ struct Turn final : public ORM_BASE
 	time_t action_timestamp;
 	bool opponent_first; // * `false` if it's `opponent1` who actes first, `true` if it's `opponent2` who actes first (must be PvP)
 	TurnDistance distance;
-	std::optional<long> action_first;
-	std::optional<long> action_second;
-	std::optional<long> bonus_action;
+	std::optional<TurnAction> action_first;
+	std::optional<TurnAction> action_second;
+	std::optional<TurnAction> bonus_action;
 
 	DECLARE_ORM_METADATA(Turn,fight_id,action_timestamp,opponent_first,action_first,action_second,bonus_action)
 };
 
 class TurnRepository final: public Repository<Turn>
 {
+public:
+	static constexpr bool OPPONENT_1 = false;
+	static constexpr bool OPPONENT_2 = true;
+
 	virtual std::string getTableName(void) override {
 		return "turn";
 	}
@@ -41,9 +46,9 @@ class TurnRepository final: public Repository<Turn>
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(action_timestamp,time_t)
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(opponent_first,bool)
 		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(distance,TurnDistance)
-		BUILD_OBJECT_ADD_FIELD_OPTIONAL(action_first,long)
-		BUILD_OBJECT_ADD_FIELD_OPTIONAL(action_second,long)
-		BUILD_OBJECT_ADD_FIELD_OPTIONAL(bonus_action,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL_WITH_INT_CAST(action_first,TurnAction)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL_WITH_INT_CAST(action_second,TurnAction)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL_WITH_INT_CAST(bonus_action,TurnAction)
 		BUILD_OBJECT_END
 	}
 
@@ -83,9 +88,9 @@ class TurnRepository final: public Repository<Turn>
 			long op1 = GET_SQLITE3_VALUE<long>(res[0]);
 			long op2 = GET_SQLITE3_VALUE<long>(res[1]);
 			if (op1 == user.id)
-				return std::make_optional<bool>(false);
+				return std::make_optional<bool>(OPPONENT_1);
 			else if (op2 == user.id)
-				return std::make_optional<bool>(true);
+				return std::make_optional<bool>(OPPONENT_2);
 			else
 				return std::nullopt;
 		}
@@ -99,7 +104,10 @@ class TurnRepository final: public Repository<Turn>
 			turn t
 				join fight f on f.id = t.fight_id
 		where
-			f.channel_id = ?
+			f.channel_id = ? and
+			f.isEnded = 0
+		order by
+			t.id DESC
 		;)";
 
 		auto res = SQLite3::Connection::inst()->cursor().execute(query,channelID)->fetchone();
@@ -109,4 +117,6 @@ class TurnRepository final: public Repository<Turn>
 		else
 			return std::make_optional<Turn>(this->findById(GET_SQLITE3_VALUE<long>(res[0])).value());
 	}
+
+	void updateCharacterTurn() {}
 };
