@@ -299,6 +299,12 @@ dpp_async FightModule::info(const dpp::slashcommand_t& event) {
 }
 
 dpp_async FightModule::attack(const dpp::button_click_t& event) {
+	/*
+	 * Obtenir l'id du salon
+	 * Extraire le dernier tour depuis le salon
+	 * checker quel est l'opponent
+	 * attribuer l'action
+	*/
 	co_await safe_coro(event.co_reply("L'action de {} a été prise en compte"));
 }
 

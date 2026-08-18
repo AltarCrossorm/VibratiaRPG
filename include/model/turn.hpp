@@ -12,6 +12,7 @@
  */
 
 #include "_base.hpp"
+#include <dpp/dpp.h>
 
 CREATE_ENUM(TurnDistance,CLOSE,MIDDLE,FAR,OUT_OR_REACH)
 
@@ -61,5 +62,51 @@ class TurnRepository final: public Repository<Turn>
 			return 0;
 		else
 			return GET_SQLITE3_VALUE<long>(res[0]);
+	}
+
+	std::optional<bool> getWhichOpponentFromTurn(dpp::user user, long turnID) {
+		std::string query = R"(
+		select
+			f.opponent1, f.opponent2
+		from 
+			fight f 
+				join turn t on f.id = t.fight_id
+		where
+			t.id = ?
+			
+		;)";
+
+		auto res = SQLite3::Connection::inst()->cursor().execute(query,turnID)->fetchone();
+		if(res.empty()) [[unlikely]]
+			return std::nullopt;
+		else [[likely]]{
+			long op1 = GET_SQLITE3_VALUE<long>(res[0]);
+			long op2 = GET_SQLITE3_VALUE<long>(res[1]);
+			if (op1 == user.id)
+				return std::make_optional<bool>(false);
+			else if (op2 == user.id)
+				return std::make_optional<bool>(true);
+			else
+				return std::nullopt;
+		}
+	}
+
+	std::optional<Turn> getLastTurnFromChannel(long channelID) {
+		std::string query = R"(
+		select 
+			t.id
+		from
+			turn t
+				join fight f on f.id = t.fight_id
+		where
+			f.channel_id = ?
+		;)";
+
+		auto res = SQLite3::Connection::inst()->cursor().execute(query,channelID)->fetchone();
+		if(res.empty())
+			return std::nullopt;
+		
+		else
+			return std::make_optional<Turn>(this->findById(GET_SQLITE3_VALUE<long>(res[0])).value());
 	}
 };
