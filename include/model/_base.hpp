@@ -28,8 +28,6 @@ struct ORM_BASE
 	static constexpr auto members() {
 		return std::make_tuple(&ORM_BASE::id);
 	}
-
-	virtual std::string getTableName() = 0;
 };
 
 using FieldValue = std::variant<std::monostate, long, double, std::string, bool>;
@@ -270,10 +268,10 @@ struct ForeignKey {
         return id; 
     }
 
-	T getEntity() {
-		T obj;
-		Repository<T> repo;
-		std::string q = "select * from "+obj.getTableName()+" where id = ?";
-		repo.buildByID(SQLite3::Connection::inst()->cursor().execute(q,this->id)->fetchone());
-	}
+	std::optional<T> getEntity(Repository<T>& repo) const {
+        if (id == 0) {
+            return std::nullopt; // Pas de relation définie
+        }
+        return repo.findById(id);
+    }
 };

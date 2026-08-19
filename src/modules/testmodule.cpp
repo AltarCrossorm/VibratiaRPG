@@ -16,12 +16,10 @@
 #include <nlohmann/json.hpp>
 #include "discordhelpers.hpp"
 #include "logSystem.hpp"
+#include "model/entity.hpp"
 #include "model/weapon.hpp"
 #include "sqlite3.hpp"
 #include "ansi.hpp"
-#include "model/enums/entityrarity.hpp"
-
-
 
 using json = nlohmann::json;
 
@@ -95,6 +93,7 @@ limit 1
 	}
 
 	WeaponRepository WRepo;
+	EntityRepository ERepo;
 
 	std::string passive;
 	for(const auto& snowflake : WRepo.getEmojisSnowflakesFromPassive(static_cast<WeaponPassive>(j["passive"].get<int>()))) {
@@ -104,7 +103,7 @@ limit 1
 	e.set_color(0xFF0000)
 	.set_thumbnail(WRepo.getUrlIconFromWeaponType(static_cast<WeaponType>(j["type"].get<int>())))
 	.set_title("Dump d'arme : "+j["name"].get<std::string>())
-	.add_field("Rareté","```ansi\n"+ansi::set(getString(static_cast<EntityRarity>(j["rarity"].get<double>())),getAnsiFromRarity(static_cast<EntityRarity>(j["rarity"].get<double>())),ansi::fmt::BOLD)+"\n```")
+	.add_field("Rareté","```ansi\n"+ansi::set(ERepo.getEntityRarityString(static_cast<EntityRarity>(j["rarity"].get<double>())),ERepo.getAnsiFromRarity(static_cast<EntityRarity>(j["rarity"].get<double>())),ansi::fmt::BOLD)+"\n```")
 	.add_field("Slots de Reliques",relics,true)
 	.add_field("Type",WRepo.getWeaponTypeString(static_cast<WeaponType>(j["type"].get<int>())),true)
 	.add_field("Passif",passive, true)
@@ -117,5 +116,4 @@ limit 1
 	msg2.add_embed(e);
 	co_await safe_coro(bot->co_message_create(msg2));
 
-	co_return;
 }
