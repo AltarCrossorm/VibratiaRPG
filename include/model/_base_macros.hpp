@@ -89,7 +89,10 @@
     static std::string getColumnName(T C::* member) { \
         ORM_NAMES(STRUCT_NAME, __VA_ARGS__) \
         std::terminate(); \
-    }
+    }\
+	virtual std::string getTableName(void) {\
+		return #STRUCT_NAME ;\
+	}
 
 #define CREATE_ENUM(enum_name, ...) \
 enum class enum_name { \

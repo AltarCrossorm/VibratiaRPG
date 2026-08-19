@@ -183,9 +183,10 @@ dpp::message FightModule::setFightEmbed(long fightID, long turn, long turnID, Fi
 
 
 dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
-	/*
-	 * Checker si le user a bien les droits
-	*/
+
+	//* Checker si le user a bien les droits
+	// TODO : Griser les emplacement d'armes non-seletionnables
+
 	FightsRepository FRepo;
 	auto lastFight = FRepo.getLastFightFromPosition(event.command.channel_id);
 	if(!lastFight){
@@ -212,6 +213,9 @@ dpp_async FightModule::drop_actions(const dpp::button_click_t& event) {
 				   row_special,
 					switch_wpn_1, switch_wpn_2, switch_wpn_3, abandon
 				   ;
+
+	std::string weapon1Name, weapon2Name, weapon3Name;
+	
 	
 	btn_attack
 		.set_label("Attaquer")
@@ -331,48 +335,169 @@ dpp_async FightModule::attack(const dpp::button_click_t& event) {
 	 * attribuer l'action
 	*/
 
+	std::string action = __func__;
+
 	TurnRepository TRepo;
 	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
 	if(!turn) {
-		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `attack` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
 		co_return;
 	}
 
-	auto opponent = TRepo.getWhichOpponentFromTurn(event.command.get_issuing_user(),turn.value().id.value());
-	if(!opponent){
-		event.owner->log(dpp::loglevel::ll_critical,"Illegal invokation detected on button `attack` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
 		co_return;
 	}
 
-	
+	TRepo.updateCharacterTurn(*turn,TurnAction::ATTACK,*isFirst);
 
 	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action d'`ATTAQUE` a été prise en compte !"));
 }
 
 dpp_async FightModule::dodge(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::DODGE,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action d'`ESQUIVE` a été prise en compte !"));
 }
 
 dpp_async FightModule::block(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::BLOCK,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `BLOC` a été prise en compte !"));
 }
 
 dpp_async FightModule::grab(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::GRAB,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `CHOPPE` a été prise en compte !"));
 }
 
 dpp_async FightModule::counter(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::COUNTER,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `CONTRE` a été prise en compte !"));
 }
 
 dpp_async FightModule::changeToWeapon1(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::WEAPON_CHANGE,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `CHANGE_WEAPON_1` a été prise en compte !"));
 }
 
 dpp_async FightModule::changeToWeapon2(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::WEAPON_CHANGE,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `CHANGE_WEAPON_2` a été prise en compte !"));
 }
 
 dpp_async FightModule::changeToWeapon3(const dpp::button_click_t& event) {
-	co_await safe_coro(event.owner->co_message_create({event.command.channel_id,"Bouton activé : __FUNC__"}));
+	std::string action = __func__;
+
+	TurnRepository TRepo;
+	auto turn = TRepo.getLastTurnFromChannel(event.command.channel_id);
+	if(!turn) {
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	auto isFirst = TRepo.isOpponentFirstFromTurn(event.command.get_issuing_user(),turn.value().id.value());
+	if(!isFirst){
+		event.owner->log(dpp::loglevel::ll_critical,"Illegal invocation detected on button `"+action+"` by "+std::to_string(event.command.get_issuing_user().id)+"!");
+		co_return;
+	}
+
+	TRepo.updateCharacterTurn(*turn,TurnAction::WEAPON_CHANGE,*isFirst);
+
+	co_await safe_coro(event.co_reply(dpp::ir_update_message,"L'action de `CHANGE_WEAPON_3` a été prise en compte !"));
 }

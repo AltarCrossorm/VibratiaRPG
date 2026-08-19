@@ -14,12 +14,14 @@
 #include "_base.hpp"
 #include <dpp/dpp.h>
 
+#include "fights.hpp"
+
 CREATE_ENUM(TurnDistance,CLOSE,MIDDLE,FAR,OUT_OR_REACH)
 CREATE_ENUM(TurnAction, NOTHING, ATTACK, BLOCK, GRAB, COUNTER, DODGE, OVERLOAD, WEAPON_CHANGE)
 
 struct Turn final : public ORM_BASE
 {
-	long fight_id;
+	ForeignKey<Fights> fight_id;
 	time_t action_timestamp;
 	bool opponent_first; // * `false` if it's `opponent1` who actes first, `true` if it's `opponent2` who actes first (must be PvP)
 	TurnDistance distance;
@@ -69,7 +71,7 @@ public:
 			return GET_SQLITE3_VALUE<long>(res[0]);
 	}
 
-	std::optional<bool> getWhichOpponentFromTurn(dpp::user user, long turnID) {
+	std::optional<bool> isOpponentFirstFromTurn(dpp::user user, long turnID) {
 		std::string query = R"(
 		select
 			f.opponent1, f.opponent2
@@ -118,5 +120,14 @@ public:
 			return std::make_optional<Turn>(this->findById(GET_SQLITE3_VALUE<long>(res[0])).value());
 	}
 
-	void updateCharacterTurn() {}
+	void updateCharacterTurn(Turn turnToUpdate, TurnAction action, bool isFirst) {
+		if (isFirst && !turnToUpdate.action_first) {
+			if(!turnToUpdate.action_first)
+				this->update(turnToUpdate.id.value(),&Turn::action_first,action);
+			else
+				this->update(turnToUpdate.id.value(),&Turn::bonus_action,action);
+		} else {
+			this->update(turnToUpdate.id.value(),&Turn::action_second,action);
+		}
+	}
 };

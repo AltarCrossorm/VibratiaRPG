@@ -10,14 +10,14 @@
  *
  * Comments and Documentation are here to help the developers who come after.
  */
+#include <string>
 #include "_base.hpp"
 #include "sqlite3.hpp"
-#include <string>
-#include "../../ansi.hpp"
+
+#include "ansi.hpp"
 
 CREATE_ENUM(EntityType, WEAPON = 1, ITEM, CONSUMABLE, RELIC, THROWABLE, INFUSER)
 CREATE_ENUM(EntityRarity, COMMON = 1, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE)
-
 
 struct Entity final : public ORM_BASE
 {

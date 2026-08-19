@@ -28,10 +28,18 @@ struct ORM_BASE
 	static constexpr auto members() {
 		return std::make_tuple(&ORM_BASE::id);
 	}
+
+	virtual std::string getTableName() = 0;
 };
 
 using FieldValue = std::variant<std::monostate, long, double, std::string, bool>;
 using Criteria = std::map<std::string, FieldValue>;
+template <typename T>
+struct is_optional : std::false_type {};
+template <typename T>
+struct is_optional<std::optional<T>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_optional_v = is_optional<T>::value;
 
 template<typename orm_obj>
 requires std::is_base_of_v<ORM_BASE, orm_obj>
@@ -131,9 +139,9 @@ public:
 		std::string sqlWhere = "";
         
         // On traite les arguments par paires grâce à une fonction helper
-        processPairs(sqlWhere, std::forward<Args>(args)...);
+        processPairs(false, sqlWhere, " and ", std::forward<Args>(args)...);
 
-        std::string query = "SELECT id FROM " + getTableName();
+        std::string query = "SELECT id FROM " + this->getTableName();
         if (!sqlWhere.empty()) {
             query += " WHERE " + sqlWhere;
         }
@@ -142,23 +150,70 @@ public:
         return this->buildByID(q);
 	}
 
-	template<typename MemberPtr, typename Value, typename... Rest>
-    void processPairs(std::string& sqlWhere, MemberPtr member, Value&& value, Rest&&... rest) {
-		if(!sqlWhere.empty()) sqlWhere += " and ";
+	template<typename ...Args>
+	requires (sizeof...(Args) % 2 == 0) && (sizeof...(Args) > 0)
+	long update(long id,Args&&... args) {
+		std::string sqlDef;
 
-		sqlWhere += getColumnName(member) + " = ";
+		processPairs(true,sqlDef,", ", std::forward<Args>(args)...);
 
-		if constexpr (std::is_same_v<std::decay_t<Value>, std::string> || 
-                      std::is_same_v<std::decay_t<Value>, const char*>) {
-            sqlWhere += "'" + std::string(value) + "'";
-        } else if constexpr (std::is_same_v<std::decay_t<Value>, bool>) {
-            sqlWhere += value ? "1" : "0";
+		std::string query = "update " + this->getTableName() + " set " + sqlDef + "where id = ?";
+
+		return SQLite3::Connection::inst()->cursor().execute(query,id)->getNbOfChanged();
+	}
+
+	template<typename T>
+    void formatSqlValue(std::string& sql, T&& val) const {
+        using CleanT = std::decay_t<T>;
+        if constexpr (std::is_same_v<CleanT, std::string> || 
+                      std::is_same_v<CleanT, const char*>) {
+            sql += "'" + std::string(val) + "'";
+        } else if constexpr (std::is_same_v<CleanT, bool>) {
+            sql += val ? "1" : "0";
+		} else if constexpr (std::is_enum_v<CleanT>){
+			sql += std::to_string(std::to_underlying(val));
         } else {
-            sqlWhere += std::to_string(value);
+            sql += std::to_string(val);
+        }
+    }
+
+	template<typename MemberPtr, typename Value, typename... Rest>
+    void processPairs(bool isUpdateAttr, std::string& sql, std::string_view sep, MemberPtr member, Value&& value, Rest&&... rest) {
+		if(!sql.empty()) sql += sep;
+
+		sql += getColumnName(member) + " = ";
+
+		using CleanValue = std::decay_t<Value>;
+
+        // Cas 1 : La valeur passée est explicitement "std::nullopt"
+        if constexpr (std::is_same_v<CleanValue, std::nullopt_t>) {
+			if (isUpdateAttr) {
+				sql += getColumnName(member) + " = NULL";
+			} else {
+            	sql += getColumnName(member) + " IS NULL";
+			}
+        }
+        // Cas 2 : La valeur passée est une variable de type "std::optional<T>"
+        else if constexpr (is_optional_v<CleanValue>) {
+            if (!value.has_value()) {
+                if (isUpdateAttr) {
+					sql += getColumnName(member) + " = NULL";
+				} else {
+					sql += getColumnName(member) + " IS NULL";
+				}
+            } else {
+                sql += getColumnName(member) + " = ";
+                formatSqlValue(sql, value.value());
+            }
+        }
+        // Cas 3 : La valeur est classique (int, string, bool, etc.)
+        else {
+            sql += getColumnName(member) + " = ";
+            formatSqlValue(sql, std::forward<Value>(value));
         }
 
         if constexpr (sizeof...(Rest) > 0) {
-            processPairs(sqlWhere, std::forward<Rest>(rest)...);
+            processPairs(isUpdateAttr, sql, sep, std::forward<Rest>(rest)...);
         }
 
 	}
@@ -190,4 +245,35 @@ public:
         auto q = SQLite3::Connection::inst()->cursor().execute(query)->fetchall();
         return this->buildByID(q);
     }
+};
+
+template <typename T>
+requires std::is_base_of_v<ORM_BASE, T>
+struct ForeignKey {
+    long id = 0;
+
+    // Constructeur vide
+    ForeignKey() = default;
+
+    // Constructeur depuis un ID SQL
+    ForeignKey(long id) : id(id) {}
+
+    // Constructeur direct depuis une entité existante !
+    ForeignKey(const T& entity) {
+        if (entity.id) {
+            this->id = entity.id.value();
+        }
+    }
+
+    // Permet de l'utiliser comme un simple entier long (pour tes clauses WHERE)
+    operator long() const { 
+        return id; 
+    }
+
+	T getEntity() {
+		T obj;
+		Repository<T> repo;
+		std::string q = "select * from "+obj.getTableName()+" where id = ?";
+		repo.buildByID(SQLite3::Connection::inst()->cursor().execute(q,this->id)->fetchone());
+	}
 };

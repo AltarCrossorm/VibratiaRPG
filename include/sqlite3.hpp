@@ -318,6 +318,10 @@ public:
 
 		return cols;
 	}
+
+	long getNbOfChanged() {
+		return sqlite3_changes64(sqlite3_db_handle(this->stmt));
+	}
 };
 
 class Connection {
