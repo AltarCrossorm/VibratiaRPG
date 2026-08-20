@@ -87,7 +87,7 @@ create table status_box (
 	constraint CK_status_box_turns_positive check(turns_remaning > 0)
 );
 
-create table inventories (
+create table inventory (
 	id			INTEGER					primary key	AUTOINCREMENT,
 	character	INTEGER					not null	references characters(id),
 	entity_id	INTEGER					not null	references entity(id),
@@ -129,13 +129,14 @@ create table character_weapons (
 );
 
 create table characters_action_weapons (
-	id			INTEGER		primary key	AUTOINCREMENT,
-	character	INTEGER		not null	references characters(id),
-	weapon_1	INTEGER			null	references inventories(id),
-	weapon_2	INTEGER			null	references inventories(id),
-	weapon_3	INTEGER			null	references inventories(id),
+	id				INTEGER		primary key	AUTOINCREMENT,
+	character		INTEGER		not null	references characters(id),
+	weapon_in_use	INTEGER			null	references inventory(id)
+	weapon_1		INTEGER			null	references inventory(id),
+	weapon_2		INTEGER			null	references inventory(id),
+	weapon_3		INTEGER			null	references inventory(id),
 
-	constraint CK_character_action_weapon_ordering check (
+	constraint CK_characters_action_weapons_ordering check (
 		(weapon_1 is null and weapon_2 is null and weapon_3 is null)
 		or
 		(weapon_1 is not null and weapon_2 is null and weapon_3 is null)
@@ -143,6 +144,15 @@ create table characters_action_weapons (
 		(weapon_1 is not null and weapon_2 is not null and weapon_3 is null)
 		or
 		(weapon_1 is not null and weapon_2 is not null and weapon_3 is not null)
+	),
+	constraint CK_characters_action_weapons_wpn_using check (
+		(weapon_in_use == weapon_1)
+		or
+		(weapon_in_use == weapon_2)
+		or
+		(weapon_in_use == weapon_3)
+		or
+		weapon_in_use is null
 	)
 );
 

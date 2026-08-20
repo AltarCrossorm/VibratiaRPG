@@ -34,7 +34,7 @@ struct Ennemy final : public ORM_BASE
 	float weight_dodge;
 	float weight_counter;
 
-	DECLARE_ORM_METADATA(Ennemy,id,name,reroll_times,base_hp,bonus_hp_per_level,base_atk,bonus_atk_per_level,base_spd,bonus_spd_per_level,base_def,bonus_def_per_level,weight_attack,weight_block,weight_grab,weight_dodge,weight_counter)
+	DECLARE_ORM_METADATA(Ennemy, id, name, reroll_times, base_hp, bonus_hp_per_level, base_atk, bonus_atk_per_level, base_spd, bonus_spd_per_level, base_def, bonus_def_per_level, weight_attack, weight_block, weight_grab, weight_dodge, weight_counter)
 };
 
 class EnnemyRepository final : public Repository<Ennemy>

@@ -17,19 +17,19 @@
 #include "fights.hpp"
 
 CREATE_ENUM(TurnDistance,CLOSE,MIDDLE,FAR,OUT_OR_REACH)
-CREATE_ENUM(TurnAction, NOTHING, ATTACK, BLOCK, GRAB, COUNTER, DODGE, OVERLOAD, WEAPON_CHANGE)
+CREATE_ENUM(TurnAction, NOTHING, ATTACK, BLOCK, GRAB, COUNTER, DODGE, OVERLOAD, WEAPON_CHANGE_TO_1, WEAPON_CHANGE_TO_2, WEAPON_CHANGE_TO_3)
 
 struct Turn final : public ORM_BASE
 {
 	ForeignKey<Fights> fight_id;
 	time_t action_timestamp;
-	bool opponent_first; // * `false` if it's `opponent1` who actes first, `true` if it's `opponent2` who actes first (must be PvP)
+	bool opponent_first; // * `false` if it's `opponent1` who actes first, `true` if it's `opponent2` who actes first
 	TurnDistance distance;
 	std::optional<TurnAction> action_first;
 	std::optional<TurnAction> action_second;
 	std::optional<TurnAction> bonus_action;
 
-	DECLARE_ORM_METADATA(Turn,fight_id,action_timestamp,opponent_first,action_first,action_second,bonus_action)
+	DECLARE_ORM_METADATA(Turn, id, fight_id, action_timestamp, opponent_first, action_first, action_second, bonus_action)
 };
 
 class TurnRepository final: public Repository<Turn>
@@ -71,34 +71,7 @@ public:
 			return GET_SQLITE3_VALUE<long>(res[0]);
 	}
 
-	std::optional<bool> isOpponentFirstFromTurn(dpp::user user, long turnID) {
-		std::string query = R"(
-		select
-			f.opponent1, f.opponent2
-		from 
-			fight f 
-				join turn t on f.id = t.fight_id
-		where
-			t.id = ?
-			
-		;)";
-
-		auto res = SQLite3::Connection::inst()->cursor().execute(query,turnID)->fetchone();
-		if(res.empty()) [[unlikely]]
-			return std::nullopt;
-		else [[likely]]{
-			long op1 = GET_SQLITE3_VALUE<long>(res[0]);
-			long op2 = GET_SQLITE3_VALUE<long>(res[1]);
-			if (op1 == user.id)
-				return std::make_optional<bool>(OPPONENT_1);
-			else if (op2 == user.id)
-				return std::make_optional<bool>(OPPONENT_2);
-			else
-				return std::nullopt;
-		}
-	}
-
-	std::optional<Turn> getLastTurnFromChannel(long channelID) {
+	std::optional<Turn> getLastTurnFromPosition(long channelID) {
 		std::string query = R"(
 		select 
 			t.id
@@ -121,13 +94,16 @@ public:
 	}
 
 	void updateCharacterTurn(Turn turnToUpdate, TurnAction action, bool isFirst) {
-		if (isFirst && !turnToUpdate.action_first) {
+		if (isFirst) {
 			if(!turnToUpdate.action_first)
 				this->update(turnToUpdate.id.value(),&Turn::action_first,action);
 			else
 				this->update(turnToUpdate.id.value(),&Turn::bonus_action,action);
 		} else {
-			this->update(turnToUpdate.id.value(),&Turn::action_second,action);
+			if(action == TurnAction::WEAPON_CHANGE_TO_1 || action == TurnAction::WEAPON_CHANGE_TO_2 || action == TurnAction::WEAPON_CHANGE_TO_3)
+				this->update(turnToUpdate.id.value(),&Turn::action_second,TurnAction::NOTHING);
+			else
+				this->update(turnToUpdate.id.value(),&Turn::action_second,action);
 		}
 	}
 };

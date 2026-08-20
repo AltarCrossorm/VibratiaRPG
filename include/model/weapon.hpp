@@ -41,7 +41,7 @@ struct Weapon final : public ORM_BASE
 	float basePassive;
 	float incrementPassive;
 
-	DECLARE_ORM_METADATA(Weapon,id,type,relicSlots,effectOverall, effect_r1, effect_r2, effect_r3, effect_r4, overloadOverall, overload_r1, overload_r2, overload_r3, overload_r4, overloadCharge, overloadCooldown, baseATK, incrementATK, passive, basePassive, incrementPassive)
+	DECLARE_ORM_METADATA(Weapon, id, type, relicSlots, effectOverall, effect_r1, effect_r2, effect_r3, effect_r4, overloadOverall, overload_r1, overload_r2, overload_r3, overload_r4, overloadCharge, overloadCooldown, baseATK, incrementATK, passive, basePassive, incrementPassive)
 };
 
 class WeaponRepository final : public Repository<Weapon>

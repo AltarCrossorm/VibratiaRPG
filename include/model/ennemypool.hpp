@@ -18,7 +18,7 @@ struct EnnemyPool final : public ORM_BASE
 	long ennemy_id;
 	long position;
 
-	DECLARE_ORM_METADATA(EnnemyPool,id,ennemy_id,position)
+	DECLARE_ORM_METADATA(EnnemyPool, id, ennemy_id, position)
 };
 
 class EnnemiesPoolRepository final : public Repository<EnnemyPool>

@@ -13,6 +13,7 @@
 #include "_base.hpp"
 #include <string>
 #include "sqlite3.hpp"
+#include <dpp/dpp.h>
 
 struct Character final : public ORM_BASE
 {

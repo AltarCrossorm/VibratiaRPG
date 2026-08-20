@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <iostream>
 #include <sqlite3.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <memory>
@@ -88,6 +89,7 @@ private:
 	 * @param value The string element, passed in with the c_str() method
 	 */
 	void bind_param(int index, const std::string& value) {
+		checksQuery(value.c_str());
 		sqlite3_bind_text(this->stmt, index, value.c_str(), -1, SQLITE_TRANSIENT); 
 	}
 
@@ -97,7 +99,18 @@ private:
 	 * @param value The string element, passing natively into the method body
 	 */
 	void bind_param(int index, const char* value) {
+		checksQuery(value);
 		sqlite3_bind_text(this->stmt, index, value, -1, SQLITE_TRANSIENT); 
+	}
+
+	/**
+	 * @fn bind_param
+	 * @param index The position in all of the '?' presents in the query
+	 * @param value The string_view element, passed in with the data() method
+	 */
+	void bind_param(int index, std::string_view value) {
+		checksQuery(value.data());
+		sqlite3_bind_text(this->stmt, index, value.data(), -1, SQLITE_TRANSIENT); 
 	}
 
 	/**
@@ -206,6 +219,28 @@ public:
 		return ( prefix == "INSERT" || prefix == "UPDATE" || prefix == "DELETE" || prefix == "CREATE" );
 	}
 
+	void checksQuery(std::string q) {
+		for(auto&& c : q)
+			c = std::tolower(c);
+		const char* cptr = q.c_str();
+		while(*cptr) { // while (cptr != '\0')
+			if (*cptr != 'd'){
+				cptr++;
+				continue;
+			} else {
+				if (*(cptr+1) == 'r' &&
+					*(cptr+2) == 'o' &&
+					*(cptr+3) == 'p' &&
+					*(cptr+4) == ' ')
+					throw std::runtime_error("[drop] found in a string used in the query !");
+				else {
+					cptr++;
+					continue;
+				}
+			}
+		}
+	}
+
 	/**
 	 * @fn execute
 	 * @param sql The query body
@@ -218,6 +253,8 @@ public:
 
 		if(!this->autoCommit && this->isWriteQuery(sql))
 			this->autoBegin();
+
+		
 
 		if (sqlite3_prepare_v2(this->db.get(), sql.c_str(), -1, &(this->stmt), nullptr) != SQLITE_OK) {
 			throw std::runtime_error("Erreur de préparation : " + std::string(sqlite3_errmsg(this->db.get())));

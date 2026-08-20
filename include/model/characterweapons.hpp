@@ -21,14 +21,14 @@ struct CharacterWeapons final : public ORM_BASE
 	ForeignKey<Entity> entity_id;
 	short level;
 	short refinement;
-	long relic_inserted_1;
-	long relic_inserted_2;
-	long relic_inserted_3;
-	long relic_inserted_4;
-	long relic_inserted_5;
-	long relic_inserted_6;
+	std::optional<long> relic_inserted_1;
+	std::optional<long> relic_inserted_2;
+	std::optional<long> relic_inserted_3;
+	std::optional<long> relic_inserted_4;
+	std::optional<long> relic_inserted_5;
+	std::optional<long> relic_inserted_6;
 	
-	DECLARE_ORM_METADATA(CharacterWeapons, character, entity_id, level, refinement, relic_inserted_1, relic_inserted_2, relic_inserted_3, relic_inserted_4, relic_inserted_5, relic_inserted_6)
+	DECLARE_ORM_METADATA(CharacterWeapons, id, character, entity_id, level, refinement, relic_inserted_1, relic_inserted_2, relic_inserted_3, relic_inserted_4, relic_inserted_5, relic_inserted_6)
 };
 
 class CharacterWeaponsRepository final : public Repository<CharacterWeapons>
@@ -36,5 +36,19 @@ class CharacterWeaponsRepository final : public Repository<CharacterWeapons>
 public:
 	virtual std::string getTableName(void) override {
 		return "character_weapons";
+	}
+
+	virtual CharacterWeapons buildObject(std::vector<RowValue> val) override {
+		BUILD_OBJECT_START(CharacterWeapons,val)
+		BUILD_OBJECT_ADD_FIELD_FOREIGN(character,Character)
+		BUILD_OBJECT_ADD_FIELD_FOREIGN(entity_id,Entity)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(level,short)
+		BUILD_OBJECT_ADD_FIELD_WITH_INT_CAST(refinement,short)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_1,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_2,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_3,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_4,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_5,long)
+		BUILD_OBJECT_ADD_FIELD_OPTIONAL(relic_inserted_6,long)
 	}
 };

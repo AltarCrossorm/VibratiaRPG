@@ -75,4 +75,27 @@ public:
 		}
 		return chaPosVec;
 	}
+
+	std::vector<CharacterPositions> getPositionsForCharactersOfAUserWithPosition(const dpp::user& user, long position) {
+		std::string query = R"(
+		select
+			cp.id,
+			cp.position
+		from
+			characters_positions cp
+				join characters c on c.id = cp.id
+		where
+			c.user = ? and
+			cp.position = ?
+		;)";
+
+		auto charPosList = SQLite3::Connection::inst()->cursor().execute(query, user.id, position)->fetchall();
+		if (charPosList.empty())
+			return {};
+		std::vector<CharacterPositions> chaPosVec;
+		for (Row &charPos : charPosList) {
+			chaPosVec.push_back(this->buildObject(charPos));
+		}
+		return chaPosVec;
+	}
 };

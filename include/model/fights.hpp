@@ -21,7 +21,7 @@ struct Fights final : public ORM_BASE
 	long opponent2;
 	bool isEnded;
 
-	DECLARE_ORM_METADATA(Fights,id,startFight,channelID,isPvP,opponent1,opponent2,isEnded)
+	DECLARE_ORM_METADATA(Fights, id, startFight, channelID, isPvP, opponent1, opponent2, isEnded)
 };
 
 class FightsRepository final : public Repository<Fights>

@@ -28,7 +28,7 @@ struct Entity final : public ORM_BASE
 	int maxStack;
 	std::string description;
 
-	DECLARE_ORM_METADATA(Entity,id,type,name,slug,rarity,maxStack,description)
+	DECLARE_ORM_METADATA(Entity, id, type, name, slug, rarity, maxStack, description)
 };
 
 class EntityRepository final : public Repository<Entity>
